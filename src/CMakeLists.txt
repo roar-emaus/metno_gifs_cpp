@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(read_temperature)
+project(create_images)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -15,7 +15,7 @@ set(NETCDF_CXX4_LIBRARY  /home/roar/projects/metno_gifs/c++/libs/netcdf-cxx4-4.3
 
 include_directories(${OpenCV_INCLUDE_DIRS} ${NETCDF_CXX4_INCLUDE_DIR})
 
-add_executable(read_temperature read_temperature.cpp)
+add_executable(create_images create_images.cpp)
 
-target_link_libraries(read_temperature ${OpenCV_LIBS} ${NETCDF_CXX4_LIBRARY})
+target_link_libraries(create_images ${OpenCV_LIBS} ${NETCDF_CXX4_LIBRARY})
 
