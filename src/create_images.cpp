@@ -38,13 +38,14 @@ std::vector<std::vector<int>> generate_colormap(const std::vector<std::vector<do
     }
     return colormap;
 }
-std::pair<float, float> get_temperature_range(const NcVar &tempVar, size_t nTime, size_t nLat, size_t nLon) {
-    std::vector<size_t> start(tempVar.getDimCount(), 0);
-    std::vector<size_t> count = {1, nLat, nLon};
-    std::vector<float> tempSlice(nLat * nLon);
 
-    float globalMinTemp = std::numeric_limits<float>::max();
-    float globalMaxTemp = std::numeric_limits<float>::lowest();
+std::pair<float, float> get_variable_range(const NcVar &var, size_t nTime, size_t nLat, size_t nLon) {
+    std::vector<size_t> start(var.getDimCount(), 0);
+    std::vector<size_t> count = {1, nLat, nLon};
+    std::vector<float> slice(nLat * nLon);
+
+    float globalMin = std::numeric_limits<float>::max();
+    float globalMax = std::numeric_limits<float>::lowest();
 
     // Process the data in time slices
     for (size_t t = 0; t < nTime; t++) {
@@ -54,30 +55,28 @@ std::pair<float, float> get_temperature_range(const NcVar &tempVar, size_t nTime
         count[0] = 1;
         count[1] = nLat;
         count[2] = nLon;
-        tempVar.getVar(start, count, tempSlice.data());
+        var.getVar(start, count, slice.data());
 
-        float sliceMinTemp = *std::min_element(tempSlice.begin(), tempSlice.end());
-        float sliceMaxTemp = *std::max_element(tempSlice.begin(), tempSlice.end());
+        float sliceMin = *std::min_element(slice.begin(), slice.end());
+        float sliceMax = *std::max_element(slice.begin(), slice.end());
 
-        globalMinTemp = std::min(globalMinTemp, sliceMinTemp);
-        globalMaxTemp = std::max(globalMaxTemp, sliceMaxTemp);
+        globalMin = std::min(globalMin, sliceMin);
+        globalMax = std::max(globalMax, sliceMax);
     }
 
-    return std::make_pair(globalMinTemp, globalMaxTemp);
+    return std::make_pair(globalMin, globalMax);
 }
 
-int main() {
+void visualize_variable(const std::string &filename, const std::string &variable_name, const std::string &output_folder) {
     try {
-        // Open the NetCDF file.
-        NcFile dataFile("met_forecast_1_0km_nordic_latest.nc", NcFile::read);
+        NcFile dataFile(filename, NcFile::read);
+        NcVar var = dataFile.getVar(variable_name);
 
-        // Get the temperature variable.
-        NcVar tempVar = dataFile.getVar("air_temperature_2m");
-        if (tempVar.isNull()) {
-            std::cerr << "Error: 'temperature' variable not found in the NetCDF file." << std::endl;
-            return 1;
+        if (var.isNull()) {
+            std::cerr << "Error: '" << variable_name << "' variable not found in the NetCDF file." << std::endl;
+            return;
         }
-
+        //
         // Get the dimensions of the temperature variable.
         NcVar latVar = dataFile.getVar("y");
         NcVar lonVar = dataFile.getVar("x");
@@ -87,15 +86,11 @@ int main() {
         size_t nLon = lonVar.getDim(0).getSize();
         size_t nTime = timeVar.getDim(0).getSize();
 
-        std::vector<size_t> start(tempVar.getDimCount(), 0);
+        std::vector<size_t> start(var.getDimCount(), 0);
         std::vector<size_t> count = {1, nLat, nLon};
 
         std::vector<float> tempSlice(nLat * nLon);
 
-        //std::vector<std::vector<int>> jet = {
-        //    {0, 0, 128}, {0, 0, 255}, {0, 128, 255}, {0, 255, 255},
-        //    {128, 255, 128}, {255, 255, 0}, {255, 128, 0}, {255, 0, 0}
-        //};
         std::vector<std::vector<double>> viridis_base = {
             {68, 1, 84},
             {72, 34, 115},
@@ -113,16 +108,14 @@ int main() {
         int colormap_size = 256;
         std::vector<std::vector<int>> viridis = generate_colormap(viridis_base, colormap_size);
 
-        // Define the temperature range and the corresponding color indices
-        std::pair<float, float> tempRange = get_temperature_range(tempVar, nTime, nLat, nLon);
-        
-        float minTemp = tempRange.first;
-        float maxTemp = tempRange.second;
-        float tempDiff = maxTemp - minTemp;
-
+        std::pair<float, float> varRange = get_variable_range(var, nTime, nLat, nLon);
+        float minVar = varRange.first;
+        float maxVar = varRange.second;
+        float varDiff = maxVar - minVar;
+        //
         // Create an OpenCV Mat object to hold the first time slice of the RGB data
         Mat img(nLat, nLon, CV_8UC3);
-        
+
         // Process the data in time slices
         for (size_t t = 0; t < nTime; t++) {
             start[0] = t;
@@ -131,14 +124,12 @@ int main() {
             count[0] = 1;
             count[1] = nLat;
             count[2] = nLon;
-            tempVar.getVar(start, count, tempSlice.data());
-            start[0] = t;
-            tempVar.getVar(start, count, tempSlice.data());
+            var.getVar(start, count, tempSlice.data());
         
             for (size_t y = 0; y < nLat; y++) {
                 for (size_t x = 0; x < nLon; x++) {
                     // Map the temperature value to a color index
-                    int colorIndex = static_cast<int>((tempSlice[y * nLon + x] - minTemp) / tempDiff* (viridis.size() - 1));
+                    int colorIndex = static_cast<int>((tempSlice[y * nLon + x] - minVar) / varDiff* (viridis.size() - 1));
         
                     // Clamp the colorIndex to the valid range
                     colorIndex = std::max(0, std::min(colorIndex, static_cast<int>(viridis.size() - 1)));
@@ -163,33 +154,28 @@ int main() {
             //imwrite(filename, img, compression_params);
 
             // JPEG FILE
-            // Save the image to disk with compression
-            std::ostringstream filenameStream;
-            filenameStream << "output/temperature_timestep_" << std::setw(2) << std::setfill('0') << t << ".jpg";
-            std::string filename = filenameStream.str();
-            
             // Set the compression parameters for the JPEG format
             std::vector<int> compression_params;
             compression_params.push_back(cv::IMWRITE_JPEG_QUALITY);
-            compression_params.push_back(75); // Quality (0-100), lower value means more compression but lower quality
-            imwrite(filename, img, compression_params);
+            compression_params.push_back(50); // Quality (0-100), lower value means more compression but lower quality
+
+            // Save image to disk
+            std::ostringstream filenameStream;
+            filenameStream << output_folder << "/timestep_" << variable_name << "_" << std::setw(2) << std::setfill('0') << t << ".jpg";
+            std::string output_filename = filenameStream.str();
+            imwrite(output_filename, img, compression_params);
 
         }
-        //
-        // Display the image
-        //namedWindow("Temperature Visualization", WINDOW_KEEPRATIO | WINDOW_GUI_EXPANDED);
-        //resizeWindow("Temperature Visualization", nLon, nLat); // Set window size
-        //imshow("Temperature Visualization", img);
-        //
-        //// Wait for a key press and close the window
-        //waitKey(0);
-        //destroyAllWindows();
-
-
     } catch (const NcException &e) {
         std::cerr << "Error: " << e.what() << std::endl;
-        return 1;
     }
+}
+
+int main() {
+    std::string input_filename = "met_forecast_1_0km_nordic_latest.nc";
+    std::string output_folder = "output";
+    std::string variable_name = "air_temperature_2m";
+    visualize_variable(input_filename, variable_name, output_folder);
 
     return 0;
 }
