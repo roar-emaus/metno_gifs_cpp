@@ -140,28 +140,15 @@ void visualize_variable(const std::string &filename, const std::string &variable
                 }
             }
 
-            // PNG FILE
-            // Save the image to disk with compression
-            //std::ostringstream filenameStream;
-            //filenameStream << "output/temperature_timestep_" << std::setw(2) << std::setfill('0') << t << ".png";
-            //std::string filename = filenameStream.str();
-            //
-            //// Set the compression parameters for the PNG format
-            //std::vector<int> compression_params;
-            //compression_params.push_back(cv::IMWRITE_PNG_COMPRESSION);
-            //compression_params.push_back(0); // Compression level (0-9), higher value means more compression but slower
-
-            //imwrite(filename, img, compression_params);
-
             // JPEG FILE
             // Set the compression parameters for the JPEG format
             std::vector<int> compression_params;
             compression_params.push_back(cv::IMWRITE_JPEG_QUALITY);
-            compression_params.push_back(50); // Quality (0-100), lower value means more compression but lower quality
+            compression_params.push_back(25); // Quality (0-100), lower value means more compression but lower quality
 
             // Save image to disk
             std::ostringstream filenameStream;
-            filenameStream << output_folder << "/timestep_" << variable_name << "_" << std::setw(2) << std::setfill('0') << t << ".jpg";
+            filenameStream << output_folder << "/" << variable_name << "_" << std::setw(2) << std::setfill('0') << t << ".jpg";
             std::string output_filename = filenameStream.str();
             imwrite(output_filename, img, compression_params);
 
@@ -173,8 +160,10 @@ void visualize_variable(const std::string &filename, const std::string &variable
 
 int main() {
     std::string input_filename = "met_forecast_1_0km_nordic_latest.nc";
-    std::string output_folder = "output";
+    std::string output_folder = "output/temperature";
     std::string variable_name = "air_temperature_2m";
+    //std::string output_folder = "output/radiation";
+    //std::string variable_name = "integral_of_surface_downwelling_shortwave_flux_in_air_wrt_time";
     visualize_variable(input_filename, variable_name, output_folder);
 
     return 0;
