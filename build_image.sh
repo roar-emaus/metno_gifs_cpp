@@ -12,11 +12,10 @@ buildah run $bc -- pacman -S --noconfirm --quiet \
     qt5-base \
     fmt \
     glew \
-    vtk
+    vtk \
+    vim
 
 buildah run $bc -- pacman -Scc --noconfirm
 
-buildah run $bc -- mkdir -p /metno_images
-buildah run $bc -- git clone https://github.com/roar-emaus/metno_gifs_cpp.git /metno_images
-buildah commit $bc localhost/create_metno_images
+buildah commit $bc localhost/create_metno_images_dev
 buildah rm $bc
