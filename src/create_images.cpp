@@ -20,6 +20,23 @@ double lerp(double a, double b, double t){
     return a*(1-t) + b*t;
 }
 
+void print_progress(size_t current, size_t total, int bar_width = 50) {
+    double progress = static_cast<double>(current) / total;
+    int pos = static_cast<int>(bar_width * progress);
+
+    std::cout << "[";
+    for (int i = 0; i < bar_width; ++i) {
+        if (i < pos) {
+            std::cout << "=";
+        } else if (i == pos) {
+            std::cout << ">";
+        } else {
+            std::cout << " ";
+        }
+    }
+    std::cout << "] " << static_cast<int>(progress * 100.0) << " %\r";
+    std::cout.flush();
+}
 
 std::vector<std::vector<int>> generate_colormap(const std::vector<std::vector<double>> &base_colormap, int size){
     std::vector<std::vector<int>> colormap(size);
@@ -176,6 +193,7 @@ void visualize_variable(const std::string &filename, const std::string &variable
             std::string output_filename = filenameStream.str();
             imwrite(output_filename, downscaled_img);//, compression_params);
 
+	    print_progress(t + 1, nTime);
         }
     } catch (const NcException &e) {
         std::cerr << "Error: " << e.what() << std::endl;
