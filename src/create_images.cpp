@@ -90,7 +90,8 @@ std::pair<float, float> get_variable_range(const NcVar &var, size_t nTime, size_
 
 void create_gif(const std::string &input_pattern, const std::string &output_filename, int delay) {
     std::ostringstream command;
-    command << "convert -monitor -delay " << delay << " -loop 0 " << input_pattern << " " << output_filename;
+    std::cout << "Converting to GIF" << std::endl;
+    command << "convert -delay " << delay << " -loop 0 " << input_pattern << " " << output_filename;
 
     int result = system(command.str().c_str());
     if (result != 0) {
@@ -102,6 +103,7 @@ void create_gif(const std::string &input_pattern, const std::string &output_file
 
 
 void visualize_variable(const std::string &filename, const std::string &variable_name, const std::string &variable_alias, const std::string &output_folder) {
+    std::cout << "Creating images for " << variable_alias << std::endl;
     try {
         NcFile dataFile(filename, NcFile::read);
         NcVar var = dataFile.getVar(variable_name);
@@ -195,6 +197,7 @@ void visualize_variable(const std::string &filename, const std::string &variable
 
 	    print_progress(t + 1, nTime);
         }
+	std::cout << std::endl;
     } catch (const NcException &e) {
         std::cerr << "Error: " << e.what() << std::endl;
     }
