@@ -3,9 +3,12 @@
 #include <sstream>
 #include <netcdf>
 #include <vector>
+#include <cstdlib>
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
+#include <opencv2/videoio.hpp>
+
 
 using namespace cv;
 using namespace netCDF;
@@ -67,7 +70,21 @@ std::pair<float, float> get_variable_range(const NcVar &var, size_t nTime, size_
     return std::make_pair(globalMin, globalMax);
 }
 
-void visualize_variable(const std::string &filename, const std::string &variable_name, const std::string &output_folder) {
+
+void create_gif(const std::string &input_pattern, const std::string &output_filename, int delay) {
+    std::ostringstream command;
+    command << "convert -monitor -delay " << delay << " -loop 0 " << input_pattern << " " << output_filename;
+
+    int result = system(command.str().c_str());
+    if (result != 0) {
+        std::cerr << "Error: Could not create the output GIF file: " << output_filename << std::endl;
+    } else {
+        std::cout << "GIF created successfully: " << output_filename << std::endl;
+    }
+}
+
+
+void visualize_variable(const std::string &filename, const std::string &variable_name, const std::string &variable_alias, const std::string &output_folder) {
     try {
         NcFile dataFile(filename, NcFile::read);
         NcVar var = dataFile.getVar(variable_name);
@@ -142,15 +159,22 @@ void visualize_variable(const std::string &filename, const std::string &variable
 
             // JPEG FILE
             // Set the compression parameters for the JPEG format
-            std::vector<int> compression_params;
-            compression_params.push_back(cv::IMWRITE_JPEG_QUALITY);
-            compression_params.push_back(25); // Quality (0-100), lower value means more compression but lower quality
+            //std::vector<int> compression_params;
+            //compression_params.push_back(cv::IMWRITE_JPEG_QUALITY);
+            //compression_params.push_back(25); // Quality (0-100), lower value means more compression but lower quality
+	    // Downscale the image
+	    double scale_factor = 0.3333; // Change this value to adjust the scaling factor
+	    int new_width = static_cast<int>(img.cols * scale_factor);
+	    int new_height = static_cast<int>(img.rows * scale_factor);
+	    Size new_size(new_width, new_height);
+	    Mat downscaled_img;
+	    resize(img, downscaled_img, new_size, 0, 0, INTER_LINEAR);
 
             // Save image to disk
             std::ostringstream filenameStream;
-            filenameStream << output_folder << "/" << variable_name << "_" << std::setw(2) << std::setfill('0') << t << ".jpg";
+            filenameStream << output_folder << "/" << variable_alias << "_" << std::setw(2) << std::setfill('0') << t << ".jpg";
             std::string output_filename = filenameStream.str();
-            imwrite(output_filename, img, compression_params);
+            imwrite(output_filename, downscaled_img);//, compression_params);
 
         }
     } catch (const NcException &e) {
@@ -158,13 +182,30 @@ void visualize_variable(const std::string &filename, const std::string &variable
     }
 }
 
-int main() {
-    std::string input_filename = "met_forecast_1_0km_nordic_latest.nc";
-    std::string output_folder = "output/temperature";
-    std::string variable_name = "air_temperature_2m";
-    //std::string output_folder = "output/radiation";
-    //std::string variable_name = "integral_of_surface_downwelling_shortwave_flux_in_air_wrt_time";
-    visualize_variable(input_filename, variable_name, output_folder);
+int main(int argc, char *argv[]) {
+    if (argc != 3) {
+        std::cerr << "Usage: " << argv[0] << " <input_filename> <variable_alias>" << std::endl;
+        return 1;
+    }
+
+    std::string input_filename = argv[1];
+
+    std::map<std::string, std::string> variable_aliases = {
+        {"temperature", "air_temperature_2m"},
+        {"radiation", "integral_of_surface_downwelling_shortwave_flux_in_air_wrt_time"}
+    };
+
+    std::string variable_alias = argv[2];
+    if (variable_aliases.find(variable_alias) == variable_aliases.end()) {
+        std::cerr << "Error: Invalid variable alias. Valid options are 'temperature' and 'radiation'." << std::endl;
+        return 1;
+    }
+
+    std::string variable_name = variable_aliases[variable_alias];
+    std::string output_folder = "output/" + variable_alias;
+
+    visualize_variable(input_filename, variable_name, variable_alias, output_folder);
+    create_gif(output_folder + "/*.jpg", output_folder + "/" + variable_alias + ".gif", 10);
 
     return 0;
 }
