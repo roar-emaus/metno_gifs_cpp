@@ -13,9 +13,12 @@ find_package(OpenCV REQUIRED)
 set(NETCDF_CXX4_INCLUDE_DIR /usr/include)
 set(NETCDF_CXX4_LIBRARY  /usr/lib/libnetcdf_c++4.so)
 
-include_directories(${OpenCV_INCLUDE_DIRS} ${NETCDF_CXX4_INCLUDE_DIR})
+# Add the path to your ThreadPool header
+set(THREADPOOL_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_executable(metno_gif create_images.cpp)
+include_directories(${OpenCV_INCLUDE_DIRS} ${NETCDF_CXX4_INCLUDE_DIR} ${THREADPOOL_INCLUDE_DIR})
+
+add_executable(metno_gif main.cpp create_images.cpp ThreadPool.cpp)
 
 target_link_libraries(metno_gif ${OpenCV_LIBS} ${NETCDF_CXX4_LIBRARY})
 
@@ -26,3 +29,4 @@ set(CMAKE_INSTALL_PREFIX /usr/local)
 install(TARGETS metno_gif
     RUNTIME DESTINATION bin
 )
+

@@ -1,15 +1,4 @@
-#include <iostream>
-#include <iomanip>
-#include <sstream>
-#include <netcdf>
-#include <vector>
-#include <cstdlib>
-#include <filesystem>
-#include <opencv2/core.hpp>
-#include <opencv2/highgui.hpp>
-#include <opencv2/imgproc.hpp>
-#include <opencv2/videoio.hpp>
-
+#include "create_images.h"
 
 using namespace cv;
 using namespace netCDF;
@@ -199,39 +188,4 @@ void visualize_variable(const std::string &filename, const std::string &variable
   }
 }
 
-int main(int argc, char *argv[]) {
-  if (argc != 3) {
-    std::cerr << "Usage: " << argv[0] << " <input_filename> <variable_alias>" << std::endl;
-    return 1;
-  }
 
-  std::string input_filename = argv[1];
-
-  std::map<std::string, std::string> variable_aliases = {
-    {"temperature", "air_temperature_2m"},
-    {"radiation", "integral_of_surface_downwelling_shortwave_flux_in_air_wrt_time"},
-    {"wind_direction", "wind_direction_10m"},
-    {"wind_speed", "wind_speed_10m"},
-    {"wind_gust", "wind_speed_of_gust"},
-    {"cloud_cover", "cloud_area_fraction"},
-    {"air_pressure", "air_pressure_at_sea_level"},
-    {"relative_humidity", "relative_humidity_2m"}
-  };
-
-  std::string variable_alias = argv[2];
-  if (variable_aliases.find(variable_alias) == variable_aliases.end()) {
-    std::cerr << "Error: Invalid variable alias. Valid options are 'temperature' and 'radiation'." << std::endl;
-    return 1;
-  }
-
-  std::string variable_name = variable_aliases[variable_alias];
-  std::string output_folder = "output/" + variable_alias;
-
-  // Create the output folders if they don't exist
-  std::filesystem::create_directories(output_folder);
-
-  visualize_variable(input_filename, variable_name, variable_alias, output_folder);
-  create_gif(output_folder + "/*.jpg", output_folder + "/" + variable_alias + ".gif", 10);
-
-  return 0;
-}

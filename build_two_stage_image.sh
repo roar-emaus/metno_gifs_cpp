@@ -23,6 +23,7 @@ buildah run $bc -- bash -c 'pacman -Sy && \
 
 # Copy your project files
 buildah copy $bc src /src
+buildah run $bc -- git clone https://github.com/vit-vit/CTPL.git /src/external_h/CTPL
 
 # Build your project
 buildah run $bc -- bash -c 'cd /src && cmake . && make'
