@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(create_images)
+project(metno_gif)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -15,7 +15,14 @@ set(NETCDF_CXX4_LIBRARY  /usr/lib/libnetcdf_c++4.so)
 
 include_directories(${OpenCV_INCLUDE_DIRS} ${NETCDF_CXX4_INCLUDE_DIR})
 
-add_executable(create_images create_images.cpp)
+add_executable(metno_gif create_images.cpp)
 
-target_link_libraries(create_images ${OpenCV_LIBS} ${NETCDF_CXX4_LIBRARY})
+target_link_libraries(metno_gif ${OpenCV_LIBS} ${NETCDF_CXX4_LIBRARY})
 
+# Set the installation path
+set(CMAKE_INSTALL_PREFIX /usr/local)
+
+# Install the executable to the specified path
+install(TARGETS metno_gif
+    RUNTIME DESTINATION bin
+)
