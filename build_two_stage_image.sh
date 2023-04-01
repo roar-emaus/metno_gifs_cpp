@@ -25,7 +25,7 @@ buildah run $bc -- bash -c 'pacman -Sy && \
 buildah copy $bc src /src
 
 # Build your project
-buildah run $bc -- bash -c 'cd /src && cmake . && make && make install'
+buildah run $bc -- bash -c 'cd /src && cmake . && make'
 
 # Second stage: Runtime stage
 rc=$(buildah from docker.io/library/archlinux:base-20230319.0.135218)
@@ -44,6 +44,9 @@ buildah run $rc -- bash -c 'pacman -Sy && \
         vtk \
         jsoncpp && \
     pacman -Scc --noconfirm'
+
+
+buildah copy --from=$bc $rc /src/metno_gif /usr/local/bin/metno_gif
 
 # Commit and remove the container
 buildah commit $rc localhost/metno_gifs
