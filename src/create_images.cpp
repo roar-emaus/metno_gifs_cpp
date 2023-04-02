@@ -102,7 +102,7 @@ void visualize_variable(const std::string &filename, const std::string &variable
       std::cerr << "Error: '" << variable_name << "' variable not found in the NetCDF file." << std::endl;
       return;
     }
-    //
+    
     // Get the dimensions of the temperature variable.
     NcVar latVar = dataFile.getVar("y");
     NcVar lonVar = dataFile.getVar("x");
@@ -115,7 +115,6 @@ void visualize_variable(const std::string &filename, const std::string &variable
     std::vector<size_t> start(var.getDimCount(), 0);
     std::vector<size_t> count = {1, nLat, nLon};
 
-    std::vector<float> tempSlice(nLat * nLon);
 
     std::vector<std::vector<double>> viridis_base = {
       {68, 1, 84},
@@ -140,8 +139,9 @@ void visualize_variable(const std::string &filename, const std::string &variable
     float varDiff = maxVar - minVar;
     //
     // Create an OpenCV Mat object to hold the first time slice of the RGB data
-    Mat img(nLat, nLon, CV_8UC3);
 
+    std::vector<float> tempSlice(nLat * nLon);
+    Mat img(nLat, nLon, CV_8UC3);
     // Process the data in time slices
     for (size_t t = 0; t < nTime; t++) {
       start[0] = t;

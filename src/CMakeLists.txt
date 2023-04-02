@@ -1,3 +1,4 @@
+
 cmake_minimum_required(VERSION 3.10)
 project(metno_gif)
 
@@ -13,14 +14,18 @@ find_package(OpenCV REQUIRED)
 set(NETCDF_CXX4_INCLUDE_DIR /usr/include)
 set(NETCDF_CXX4_LIBRARY  /usr/lib/libnetcdf_c++4.so)
 
-# Add the path to your ThreadPool header
-set(THREADPOOL_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+include_directories(${OpenCV_INCLUDE_DIRS} ${NETCDF_CXX4_INCLUDE_DIR})
 
-include_directories(${OpenCV_INCLUDE_DIRS} ${NETCDF_CXX4_INCLUDE_DIR} ${THREADPOOL_INCLUDE_DIR})
+add_executable(metno_gif main.cpp create_images.cpp)
 
-add_executable(metno_gif main.cpp create_images.cpp ThreadPool.cpp)
-
-target_link_libraries(metno_gif ${OpenCV_LIBS} ${NETCDF_CXX4_LIBRARY})
+# Find and link OpenMP
+#find_package(OpenMP)
+#if(OpenMP_CXX_FOUND)
+#    target_link_libraries(metno_gif PUBLIC OpenMP::OpenMP_CXX ${OpenCV_LIBS} ${NETCDF_CXX4_LIBRARY})
+#else()
+#    target_link_libraries(metno_gif PUBLIC ${OpenCV_LIBS} ${NETCDF_CXX4_LIBRARY})
+#endif()
+target_link_libraries(metno_gif PUBLIC ${OpenCV_LIBS} ${NETCDF_CXX4_LIBRARY})
 
 # Set the installation path
 set(CMAKE_INSTALL_PREFIX /usr/local)
@@ -29,4 +34,3 @@ set(CMAKE_INSTALL_PREFIX /usr/local)
 install(TARGETS metno_gif
     RUNTIME DESTINATION bin
 )
-
