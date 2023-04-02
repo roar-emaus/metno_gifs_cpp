@@ -28,7 +28,7 @@ temperature, radiation, wind direction, wind speed, wind gust, cloud cover, air 
 
 1. Clone the repository:
 ```
-git clone https://github.com/yourusername/metno_gif_generator.git
+git clone https://github.com/yourusername/metno_gifs_cpp.git metno_gif_generator
 cd metno_gif_generator
 ```
 2. Build the project using the provided script:
