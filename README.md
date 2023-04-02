@@ -1,6 +1,9 @@
 # MetNO GIF Generator
 
-This project is a command-line tool for generating GIFs from MetNO weather data in NetCDF format. It supports multiple weather variables such as temperature, radiation, wind direction, wind speed, wind gust, cloud cover, air pressure, and relative humidity.
+This project is a command-line tool for generating GIFs from MetNO weather data in NetCDF format.
+It supports the [MET post-processed products](https://thredds.met.no/thredds/metno.html) with weather variables
+temperature, radiation, wind direction, wind speed, wind gust, cloud cover, air pressure, and relative humidity.
+
 ## Table of Contents
 
 - Requirements
@@ -54,9 +57,9 @@ metno_gif --input <input_file> --var <variable> --output <output_folder>
 If no variable is provided, the tool will generate GIFs for all supported variables.
 
 ## Data Source
-The data used in this project is provided by the [https://www.met.no/en](Norwegian Meteorological Institute (MET Norway)).
-lease ensure that you follow their terms of service and provide proper attribution when using the data ([https://thredds.met.no/thredds/metno.html](MET Norway Numerical Weather Prediction products)).
+The data used in this project is provided by the [Norwegian Meteorological Institute (MET Norway)](https://www.met.no/en).
+Please ensure that you follow their terms of service and provide proper attribution when using the data ([MET Norway Numerical Weather Prediction products](https://thredds.met.no/thredds/metno.html)).
 
 ## License
 
-This project is licensed under the MIT License - see the [https://mit-license.org/](LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](https://mit-license.org/) file for details.
