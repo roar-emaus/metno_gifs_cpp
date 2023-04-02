@@ -43,7 +43,7 @@ Run the tool with the following command:
 metno_gif --input <input_file> --var <variable> --output <output_folder>
 ```
 - <input_file>: The path to the input NetCDF file.
-- <variable>: The name of the weather variable to generate the GIF for. Supported variables are:
+- \<variable\>: The name of the weather variable to generate the GIF for. Supported variables are:
     * temperature
     * radiation
     * wind_direction
