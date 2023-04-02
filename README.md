@@ -6,10 +6,15 @@ temperature, radiation, wind direction, wind speed, wind gust, cloud cover, air 
 
 ## Table of Contents
 
+- ToDo
 - Requirements
 - Installation
 - Usage
 - License
+
+## ToDo
+- [ ] Add more colormaps for different variabels
+- [ ] 
 
 ## Requirements
 
@@ -63,3 +68,4 @@ Please ensure that you follow their terms of service and provide proper attribut
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](https://mit-license.org/) file for details.
+

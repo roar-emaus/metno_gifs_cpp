@@ -30,7 +30,6 @@ time_t get_remote_timestamp() {
     std::string command = "curl -s -I " + url + " | grep -i 'Last-Modified' | awk '{ print substr($0, index($0,$2)) }'";
     char buffer[128];
     std::string result = "";
-    std::cout << command << std::endl;
 
     FILE *pipe = popen(command.c_str(), "r");
     if (!pipe) {
