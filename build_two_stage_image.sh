@@ -18,7 +18,8 @@ buildah run $bc -- bash -c 'pacman -Sy && \
         qt5-base \
         fmt \
         glew \
-        vtk && \
+        vtk \
+        curl && \
     pacman -Scc --noconfirm'
 
 # Copy your project files
@@ -43,9 +44,9 @@ buildah run $rc -- bash -c 'pacman -Sy && \
         fmt \
         glew \
         vtk \
-        jsoncpp && \
+        jsoncpp \
+        curl && \
     pacman -Scc --noconfirm'
-
 
 buildah copy --from=$bc $rc /src/metno_gif /usr/local/bin/metno_gif
 

@@ -19,7 +19,7 @@ buildah run $bc -- bash -c 'pacman -Sy && \
         fmt \
         glew \
         vtk \
-        wget && \
+        curl && \
     pacman -Scc --noconfirm'
 
 buildah commit $bc localhost/metno_gifs_dev

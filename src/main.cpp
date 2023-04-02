@@ -1,8 +1,9 @@
 #include "create_images.h"
+#include "download.h"
 #include <map>
 #include <filesystem>
 
-bool parse_arguments(int argc, char *argv[], std::string& input_file, std::string& variable, std::string& output_folder) {
+bool parse_arguments(int argc, char *argv[], std::string& input_file, std::string& variable, std::string& output_folder, bool& download) {
     for (int i = 1; i < argc; i += 2) {
         if (i + 1 >= argc) {
             std::cerr << "Error: Missing value for argument " << argv[i] << std::endl;
@@ -14,6 +15,9 @@ bool parse_arguments(int argc, char *argv[], std::string& input_file, std::strin
             variable = argv[i + 1];
         } else if (strcmp(argv[i], "--output") == 0) {
             output_folder = argv[i + 1];
+        } else if (strcmp(argv[i], "--download") == 0) {
+            download = true;
+            i--;
         } else {
             std::cerr << "Error: Unknown argument " << argv[i] << std::endl;
             return false;
@@ -44,8 +48,9 @@ int main(int argc, char *argv[]) {
     std::string input_file;
     std::string variable;
     std::string output_folder = "output";
+    bool download = false;
 
-    if (!parse_arguments(argc, argv, input_file, variable, output_folder)) {
+    if (!parse_arguments(argc, argv, input_file, variable, output_folder, download)) {
         return 1;
     }
 
@@ -60,6 +65,13 @@ int main(int argc, char *argv[]) {
         {"relative_humidity", "relative_humidity_2m"}
     };
 
+    if (download) {
+        if (download_if_newer(input_file)) {
+            std::cout << "Downloaded a newer version of the dataset." << std::endl;
+        } else {
+            std::cout << "Local dataset is already up-to-date." << std::endl;
+        }
+    }
     if (!variable.empty()) {
         auto it = variable_aliases.find(variable);
         if (it != variable_aliases.end()) {

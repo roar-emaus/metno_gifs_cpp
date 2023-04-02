@@ -14,11 +14,13 @@ find_package(OpenCV REQUIRED)
 set(NETCDF_CXX4_INCLUDE_DIR /usr/include)
 set(NETCDF_CXX4_LIBRARY  /usr/lib/libnetcdf_c++4.so)
 
-include_directories(${OpenCV_INCLUDE_DIRS} ${NETCDF_CXX4_INCLUDE_DIR})
+find_package(CURL REQUIRED)
 
-add_executable(metno_gif main.cpp create_images.cpp)
+include_directories(${OpenCV_INCLUDE_DIRS} ${NETCDF_CXX4_INCLUDE_DIR} ${CURL_INCLUDE_DIRS})
 
-target_link_libraries(metno_gif PUBLIC ${OpenCV_LIBS} ${NETCDF_CXX4_LIBRARY})
+add_executable(metno_gif main.cpp create_images.cpp download.cpp)
+
+target_link_libraries(metno_gif PUBLIC ${OpenCV_LIBS} ${NETCDF_CXX4_LIBRARY} ${CURL_LIBRARIES})
 
 # Set the installation path
 set(CMAKE_INSTALL_PREFIX /usr/local)
