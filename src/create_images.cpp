@@ -37,7 +37,7 @@ void remove_existing_images(const std::string &output_folder, const std::string 
 }
 
 
-std::vector<std::vector<int>> generate_colormap(const std::vector<std::vector<double>> &base_colormap, int size){
+std::vector<std::vector<int>> generate_colormap(const std::vector<std::vector<int>> &base_colormap, int size){
   std::vector<std::vector<int>> colormap(size);
   int base_size = base_colormap.size();
   for (int i = 0; i < size; ++i){
@@ -103,7 +103,7 @@ void create_gif(const std::string &input_pattern, const std::string &output_file
   }
 }
 
-std::vector<std::vector<int>> load_colormap(const std::vector<std::vector<double>> &base_colormap, int size) {
+std::vector<std::vector<int>> load_colormap(const std::vector<std::vector<int>> &base_colormap, int size) {
   return generate_colormap(base_colormap, size);
 }
 
@@ -123,9 +123,10 @@ Mat create_image_for_time_step(const NcVar &var, size_t t, size_t nLat, size_t n
   Mat img(nLat, nLon, CV_8UC3);
   for (size_t y = 0; y < nLat; y++) {
     for (size_t x = 0; x < nLon; x++) {
-      int colorIndex = static_cast<int>((tempSlice[y * nLon + x] - minVar) / (maxVar - minVar) * (colormap.size() - 1));
-      colorIndex = std::max(0, std::min(colorIndex, static_cast<int>(colormap.size() - 1)));
-      Vec3b color(colormap[colorIndex][0], colormap[colorIndex][1], colormap[colorIndex][2]);
+      float normValue = (tempSlice[y * nLon + x] - minVar) / (maxVar - minVar);
+      int colorIndex = static_cast<int>(std::round(normValue * (colormap.size() - 1)));
+      colorIndex = std::clamp(colorIndex, 0, static_cast<int>(colormap.size() - 1));
+      Vec3b color(colormap[colorIndex][2], colormap[colorIndex][1], colormap[colorIndex][0]);
       img.at<Vec3b>(nLat - y - 1, x) = color;
     }
   }
@@ -160,7 +161,7 @@ void create_images(const std::string &filename, const std::string &variable_name
     size_t nTime, nLat, nLon;
     std::tie(var, nTime, nLat, nLon) = load_netcdf_variable(dataFile, variable_name);
     
-    std::vector<std::vector<double>> viridis_base = {
+    std::vector<std::vector<int>> viridis_base = {
       {68, 1, 84},
       {72, 34, 115},
       {64, 67, 135},
@@ -173,6 +174,19 @@ void create_images(const std::string &filename, const std::string &variable_name
       {189, 222, 38},
       {253, 231, 36}
     };
+
+    std::vector<std::vector<int>> blues_base = {
+      { 247, 251, 255 },
+      { 221, 234, 246 },
+      { 197, 218, 238 },
+      { 157, 201, 224 },
+      { 106, 173, 213 },
+      { 65, 145, 197 },
+      { 32, 112, 180 },
+      { 8, 80, 154 },
+      { 8, 48, 107 },
+    };
+
 
     int colormap_size = 256;
     std::vector<std::vector<int>> viridis = load_colormap(viridis_base, colormap_size);
