@@ -58,6 +58,122 @@ std::vector<std::vector<int>> generate_colormap(const std::vector<std::vector<in
   return colormap;
 }
 
+std::vector<std::vector<int>> get_base_colormap(const std::string& variable_alias) {
+  if (variable_alias == "relative_humidity") {
+    return {
+      { 247, 251, 255 },
+      { 221, 234, 246 },
+      { 197, 218, 238 },
+      { 157, 201, 224 },
+      { 106, 173, 213 },
+      { 65, 145, 197 },
+      { 32, 112, 180 },
+      { 8, 80, 154 },
+      { 8, 48, 107 },
+    };
+  } else if(variable_alias == "air_pressure") {
+    return {
+      { 5, 48, 97 },
+      { 41, 113, 177 },
+      { 107, 172, 208 },
+      { 194, 221, 235 },
+      { 247, 246, 246 },
+      { 250, 204, 180 },
+      { 228, 128, 101 },
+      { 185, 39, 50 },
+      { 103, 0, 31 },
+    };
+  } else if (variable_alias == "radiation") {
+    return {
+      { 5, 48, 97 },
+      { 41, 113, 177 },
+      { 107, 172, 208 },
+      { 194, 221, 235 },
+      { 247, 246, 246 },
+      { 250, 204, 180 },
+      { 228, 128, 101 },
+      { 185, 39, 50 },
+      { 103, 0, 31 },
+    };
+
+  } else if (variable_alias == "wind_direction") {
+      return {
+        { 225, 216, 226 },
+        { 148, 180, 198 },
+        { 97, 117, 186 },
+        { 89, 42, 143 },
+        { 47, 20, 54 },
+        { 115, 29, 78 },
+        { 178, 86, 82 },
+        { 204, 163, 137 },
+        { 225, 216, 225 },
+      };
+
+  } else if (variable_alias == "wind_speed") {
+      return {
+        { 255, 255, 255 },
+        { 223, 223, 223 },
+        { 191, 191, 191 },
+        { 159, 159, 159 },
+        { 127, 127, 127 },
+        { 95, 95, 95 },
+        { 63, 63, 63 },
+        { 31, 31, 31 },
+        { 0, 0, 0 },
+      };
+  } else if (variable_alias == "wind_gust") {
+      return {
+        { 255, 255, 255 },
+        { 223, 223, 223 },
+        { 191, 191, 191 },
+        { 159, 159, 159 },
+        { 127, 127, 127 },
+        { 95, 95, 95 },
+        { 63, 63, 63 },
+        { 31, 31, 31 },
+        { 0, 0, 0 },
+      };
+  } else if (variable_alias == "temperature") {
+      return {
+        { 94, 79, 162 },
+        { 63, 150, 182 },
+        { 137, 207, 164 },
+        { 216, 239, 154 },
+        { 254, 254, 189 },
+        { 253, 210, 127 },
+        { 248, 139, 81 },
+        { 219, 72, 76 },
+        { 158, 1, 66 },
+      };
+  } else if (variable_alias == "cloud_cover"){
+    return {
+      { 247, 251, 255 },
+      { 221, 234, 246 },
+      { 197, 218, 238 },
+      { 157, 201, 224 },
+      { 106, 173, 213 },
+      { 65, 145, 197 },
+      { 32, 112, 180 },
+      { 8, 80, 154 },
+      { 8, 48, 107 },
+    };
+  }
+  // default color map: "viridis"
+  return  {
+    {68, 1, 84},
+    {72, 34, 115},
+    {64, 67, 135},
+    {52, 94, 141},
+    {41, 120, 142},
+    {32, 144, 140},
+    {34, 167, 132},
+    {68, 190, 112},
+    {121, 209, 81},
+    {189, 222, 38},
+    {253, 231, 36}
+  };
+}
+
 std::pair<float, float> get_variable_range(const NcVar &var, size_t nTime, size_t nLat, size_t nLon) {
   size_t num_dims = var.getDimCount();
   std::vector<size_t> start(var.getDimCount(), 0);
@@ -161,35 +277,9 @@ void create_images(const std::string &filename, const std::string &variable_name
     size_t nTime, nLat, nLon;
     std::tie(var, nTime, nLat, nLon) = load_netcdf_variable(dataFile, variable_name);
     
-    std::vector<std::vector<int>> viridis_base = {
-      {68, 1, 84},
-      {72, 34, 115},
-      {64, 67, 135},
-      {52, 94, 141},
-      {41, 120, 142},
-      {32, 144, 140},
-      {34, 167, 132},
-      {68, 190, 112},
-      {121, 209, 81},
-      {189, 222, 38},
-      {253, 231, 36}
-    };
-
-    std::vector<std::vector<int>> blues_base = {
-      { 247, 251, 255 },
-      { 221, 234, 246 },
-      { 197, 218, 238 },
-      { 157, 201, 224 },
-      { 106, 173, 213 },
-      { 65, 145, 197 },
-      { 32, 112, 180 },
-      { 8, 80, 154 },
-      { 8, 48, 107 },
-    };
-
-
     int colormap_size = 256;
-    std::vector<std::vector<int>> viridis = load_colormap(viridis_base, colormap_size);
+    std::vector<std::vector<int>> base_colormap = get_base_colormap(variable_alias);
+    std::vector<std::vector<int>> viridis = load_colormap(base_colormap, colormap_size);
 
     std::pair<float, float> varRange = get_variable_range(var, nTime, nLat, nLon);
     float minVar = varRange.first;
