@@ -18,13 +18,6 @@ include_directories(${OpenCV_INCLUDE_DIRS} ${NETCDF_CXX4_INCLUDE_DIR})
 
 add_executable(metno_gif main.cpp create_images.cpp)
 
-# Find and link OpenMP
-#find_package(OpenMP)
-#if(OpenMP_CXX_FOUND)
-#    target_link_libraries(metno_gif PUBLIC OpenMP::OpenMP_CXX ${OpenCV_LIBS} ${NETCDF_CXX4_LIBRARY})
-#else()
-#    target_link_libraries(metno_gif PUBLIC ${OpenCV_LIBS} ${NETCDF_CXX4_LIBRARY})
-#endif()
 target_link_libraries(metno_gif PUBLIC ${OpenCV_LIBS} ${NETCDF_CXX4_LIBRARY})
 
 # Set the installation path
