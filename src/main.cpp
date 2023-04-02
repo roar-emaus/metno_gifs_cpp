@@ -1,4 +1,6 @@
 #include "create_images.h"
+#include <map>
+#include <filesystem>
 
 bool parse_arguments(int argc, char *argv[], std::string& input_file, std::string& variable, std::string& output_folder) {
     for (int i = 1; i < argc; i += 2) {

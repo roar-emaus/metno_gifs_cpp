@@ -1,10 +1,5 @@
 #include "create_images.h"
 
-using namespace cv;
-using namespace netCDF;
-using namespace netCDF::exceptions;
-
-
 // Linear interpolation 
 double lerp(double a, double b, double t){
   return a*(1-t) + b*t;
@@ -50,14 +45,14 @@ std::vector<std::vector<int>> generate_colormap(const std::vector<std::vector<do
 }
 
 std::pair<float, float> get_variable_range(const NcVar &var, size_t nTime, size_t nLat, size_t nLon) {
+  size_t num_dims = var.getDimCount();
   std::vector<size_t> start(var.getDimCount(), 0);
   std::vector<size_t> count = {1, nLat, nLon};
   std::vector<float> slice(nLat * nLon);
-
   float globalMin = std::numeric_limits<float>::max();
   float globalMax = std::numeric_limits<float>::lowest();
 
-  // Process the data in time slices
+  std::cout << "Finding min/max values" << std::endl;
   for (size_t t = 0; t < nTime; t++) {
     start[0] = t;
     start[1] = 0;
@@ -72,7 +67,10 @@ std::pair<float, float> get_variable_range(const NcVar &var, size_t nTime, size_
 
     globalMin = std::min(globalMin, sliceMin);
     globalMax = std::max(globalMax, sliceMax);
+
+    print_progress(t+1, nTime);
   }
+  std::cout << std::endl;
 
   return std::make_pair(globalMin, globalMax);
 }
@@ -91,31 +89,59 @@ void create_gif(const std::string &input_pattern, const std::string &output_file
   }
 }
 
+std::vector<std::vector<int>> load_colormap(const std::vector<std::vector<double>> &base_colormap, int size) {
+  return generate_colormap(base_colormap, size);
+}
+
+Mat create_image_for_time_step(const NcVar &var, size_t t, size_t nLat, size_t nLon, const std::vector<std::vector<int>> &colormap, float minVar, float maxVar) {
+  std::vector<size_t> start(var.getDimCount(), 0);
+  std::vector<size_t> count = {1, nLat, nLon};
+  std::vector<float> tempSlice(nLat * nLon);
+
+  start[0] = t;
+  start[1] = 0;
+  start[2] = 0;
+  count[0] = 1;
+  count[1] = nLat;
+  count[2] = nLon;
+  var.getVar(start, count, tempSlice.data());
+
+  Mat img(nLat, nLon, CV_8UC3);
+  for (size_t y = 0; y < nLat; y++) {
+    for (size_t x = 0; x < nLon; x++) {
+      int colorIndex = static_cast<int>((tempSlice[y * nLon + x] - minVar) / (maxVar - minVar) * (colormap.size() - 1));
+      colorIndex = std::max(0, std::min(colorIndex, static_cast<int>(colormap.size() - 1)));
+      Vec3b color(colormap[colorIndex][0], colormap[colorIndex][1], colormap[colorIndex][2]);
+      img.at<Vec3b>(nLat - y - 1, x) = color;
+    }
+  }
+
+  return img;
+}
+
+
+std::tuple<NcVar, size_t, size_t, size_t> load_netcdf_variable(NcFile &dataFile, const std::string &variable_name) {
+  NcVar var = dataFile.getVar(variable_name);
+
+  NcVar latVar = dataFile.getVar("y");
+  NcVar lonVar = dataFile.getVar("x");
+  NcVar timeVar = dataFile.getVar("time");
+
+  size_t nLat = latVar.getDim(0).getSize();
+  size_t nLon = lonVar.getDim(0).getSize();
+  size_t nTime = timeVar.getDim(0).getSize();
+  return std::make_tuple(var, nTime, nLat, nLon);
+}
 
 void visualize_variable(const std::string &filename, const std::string &variable_name, const std::string &variable_alias, const std::string &output_folder) {
   std::cout << "Creating images for " << variable_alias << std::endl;
+
   try {
     NcFile dataFile(filename, NcFile::read);
-    NcVar var = dataFile.getVar(variable_name);
-
-    if (var.isNull()) {
-      std::cerr << "Error: '" << variable_name << "' variable not found in the NetCDF file." << std::endl;
-      return;
-    }
+    NcVar var;
+    size_t nTime, nLat, nLon;
+    std::tie(var, nTime, nLat, nLon) = load_netcdf_variable(dataFile, variable_name);
     
-    // Get the dimensions of the temperature variable.
-    NcVar latVar = dataFile.getVar("y");
-    NcVar lonVar = dataFile.getVar("x");
-    NcVar timeVar = dataFile.getVar("time");
-
-    size_t nLat = latVar.getDim(0).getSize();
-    size_t nLon = lonVar.getDim(0).getSize();
-    size_t nTime = timeVar.getDim(0).getSize();
-
-    std::vector<size_t> start(var.getDimCount(), 0);
-    std::vector<size_t> count = {1, nLat, nLon};
-
-
     std::vector<std::vector<double>> viridis_base = {
       {68, 1, 84},
       {72, 34, 115},
@@ -129,42 +155,16 @@ void visualize_variable(const std::string &filename, const std::string &variable
       {189, 222, 38},
       {253, 231, 36}
     };
-    
+
     int colormap_size = 256;
-    std::vector<std::vector<int>> viridis = generate_colormap(viridis_base, colormap_size);
+    std::vector<std::vector<int>> viridis = load_colormap(viridis_base, colormap_size);
 
     std::pair<float, float> varRange = get_variable_range(var, nTime, nLat, nLon);
     float minVar = varRange.first;
     float maxVar = varRange.second;
-    float varDiff = maxVar - minVar;
-    //
-    // Create an OpenCV Mat object to hold the first time slice of the RGB data
-
-    std::vector<float> tempSlice(nLat * nLon);
-    Mat img(nLat, nLon, CV_8UC3);
-    // Process the data in time slices
+    std::cout << "Time loop" << std::endl;
     for (size_t t = 0; t < nTime; t++) {
-      start[0] = t;
-      start[1] = 0;
-      start[2] = 0;
-      count[0] = 1;
-      count[1] = nLat;
-      count[2] = nLon;
-      var.getVar(start, count, tempSlice.data());
-    
-      for (size_t y = 0; y < nLat; y++) {
-          for (size_t x = 0; x < nLon; x++) {
-              // Map the temperature value to a color index
-              int colorIndex = static_cast<int>((tempSlice[y * nLon + x] - minVar) / varDiff* (viridis.size() - 1));
-    
-              // Clamp the colorIndex to the valid range
-              colorIndex = std::max(0, std::min(colorIndex, static_cast<int>(viridis.size() - 1)));
-    
-              // Set the RGB value of the pixel
-              Vec3b color(viridis[colorIndex][0], viridis[colorIndex][1], viridis[colorIndex][2]);
-              img.at<Vec3b>(nLat - y - 1, x) = color;
-          }
-      }
+      Mat img = create_image_for_time_step(var, t, nLat, nLon, viridis, minVar, maxVar);
 
       // Downscale the image
       double scale_factor = 0.3333; // Change this value to adjust the scaling factor
@@ -178,7 +178,7 @@ void visualize_variable(const std::string &filename, const std::string &variable
       std::ostringstream filenameStream;
       filenameStream << output_folder << "/" << variable_alias << "_" << std::setw(2) << std::setfill('0') << t << ".jpg";
       std::string output_filename = filenameStream.str();
-      imwrite(output_filename, downscaled_img);//, compression_params);
+      imwrite(output_filename, downscaled_img);
 
       print_progress(t + 1, nTime);
     }
@@ -187,5 +187,3 @@ void visualize_variable(const std::string &filename, const std::string &variable
     std::cerr << "Error: " << e.what() << std::endl;
   }
 }
-
-
