@@ -23,6 +23,20 @@ void print_progress(size_t current, size_t total, int bar_width = 50) {
   std::cout.flush();
 }
 
+void remove_existing_images(const std::string &output_folder, const std::string &variable_alias) {
+  std::regex image_pattern(variable_alias + "_\\d{2}\\.jpg");
+  try {
+    for (const auto &entry : std::filesystem::directory_iterator(output_folder)) {
+      if (entry.is_regular_file() && std::regex_match(entry.path().filename().string(), image_pattern)) {
+        std::filesystem::remove(entry.path());
+      }
+    }
+  } catch (const std::filesystem::filesystem_error &e) {
+    std::cerr << "Error while cleaning up images: " << e.what() << std::endl;
+  }
+}
+
+
 std::vector<std::vector<int>> generate_colormap(const std::vector<std::vector<double>> &base_colormap, int size){
   std::vector<std::vector<int>> colormap(size);
   int base_size = base_colormap.size();
@@ -134,6 +148,10 @@ std::tuple<NcVar, size_t, size_t, size_t> load_netcdf_variable(NcFile &dataFile,
 }
 
 void create_images(const std::string &filename, const std::string &variable_name, const std::string &variable_alias, const std::string &output_folder) {
+
+  std::cout << "Cleaning up existing images for " << variable_alias << std::endl;
+  remove_existing_images(output_folder, variable_alias);
+
   std::cout << "Creating images for " << variable_alias << std::endl;
 
   try {
