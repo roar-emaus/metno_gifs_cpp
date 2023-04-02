@@ -133,7 +133,7 @@ std::tuple<NcVar, size_t, size_t, size_t> load_netcdf_variable(NcFile &dataFile,
   return std::make_tuple(var, nTime, nLat, nLon);
 }
 
-void visualize_variable(const std::string &filename, const std::string &variable_name, const std::string &variable_alias, const std::string &output_folder) {
+void create_images(const std::string &filename, const std::string &variable_name, const std::string &variable_alias, const std::string &output_folder) {
   std::cout << "Creating images for " << variable_alias << std::endl;
 
   try {

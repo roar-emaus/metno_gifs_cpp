@@ -30,7 +30,7 @@ bool parse_arguments(int argc, char *argv[], std::string& input_file, std::strin
 
 void create_variable_images(const std::string& input_file, const std::string& variable, const std::string& alias, const std::filesystem::path& output_folder) {
     std::filesystem::create_directories(output_folder);
-    visualize_variable(input_file, variable, alias, output_folder.string());
+    create_images(input_file, variable, alias, output_folder.string());
 }
 
 void create_variable_gif(const std::string& alias, const std::filesystem::path& output_folder){

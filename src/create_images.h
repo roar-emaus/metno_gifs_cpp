@@ -21,7 +21,7 @@ void print_progress(unsigned long current, unsigned long total, int bar_width);
 std::vector<std::vector<int>> generate_colormap(const std::vector<std::vector<double>>& data, int num_colors);
 std::pair<float, float> get_variable_range(const netCDF::NcVar& variable, unsigned long start, unsigned long count, unsigned long stride);
 void create_gif(const std::string& input_filename, const std::string& output_filename, int delay);
-void visualize_variable(const std::string& input_filename, const std::string& variable_name, const std::string& output_dir, const std::string& output_format);
+void create_images(const std::string& input_filename, const std::string& variable_name, const std::string& output_dir, const std::string& output_format);
 std::tuple<NcVar, size_t, size_t, size_t> load_netcdf_variable(NcFile &dataFile, const std::string &variable_name);
 std::vector<std::vector<int>> load_colormap(const std::vector<std::vector<double>> &base_colormap, int size);
 Mat create_image_for_time_step(const NcVar &var, size_t t, size_t nLat, size_t nLon, const std::vector<std::vector<int>> &colormap, float minVar, float maxVar);
