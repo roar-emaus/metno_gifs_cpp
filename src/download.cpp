@@ -97,7 +97,7 @@ bool download_if_newer(const std::string &output_path) {
     time_t local_time = get_local_timestamp(output_path);
     std::cout << "local time: " << local_time <<  " remote time: " << remote_time << std::endl;
 
-    if (remote_time > local_time) {
+    if (remote_time > local_time || local_time == 0) {
         return download_file(output_path);
     }
 
