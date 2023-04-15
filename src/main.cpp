@@ -1,6 +1,7 @@
+#include <map>
+#include <chrono>
 #include "create_images.h"
 #include "download.h"
-#include <map>
 
 bool parse_arguments(int argc, char *argv[], std::string& input_file, std::string& variable, std::string& output_folder, bool& download) {
     for (int i = 1; i < argc; i += 2) {
@@ -65,13 +66,19 @@ int main(int argc, char *argv[]) {
     };
 
     if (download) {
+        // Capture the start time
+        auto download_start_time = std::chrono::high_resolution_clock::now();
         if (download_if_newer(input_file)) {
             std::cout << "Downloaded a newer version of the dataset." << std::endl;
         } else {
             std::cout << "Local dataset is already up-to-date." << std::endl;
         }
+        auto download_end_time = std::chrono::high_resolution_clock::now();
+        auto download_duration = std::chrono::duration<double>(download_end_time - download_start_time).count();
+        std::cout << std::fixed << std::setprecision(3) << "Download time: " << download_duration << " m" << std::endl;
     }
     if (!variable.empty()) {
+        auto start_time = std::chrono::high_resolution_clock::now();
         auto it = variable_aliases.find(variable);
         if (it != variable_aliases.end()) {
             std::filesystem::path variable_output_folder = std::filesystem::path(output_folder) / it->first;
@@ -81,13 +88,20 @@ int main(int argc, char *argv[]) {
             std::cerr << "Error: Invalid variable name provided." << std::endl;
             return 1;
         }
+        auto end_time = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration<double>(end_time - start_time).count();
+        std::cout << std::fixed << std::setprecision(3)<< "Execution time: " << duration << " s" << std::endl;
     } else {
         for (const auto& alias_pair : variable_aliases) {
+            auto start_time = std::chrono::high_resolution_clock::now();
             const std::string& variable_name = alias_pair.first;
             const std::string& variable_alias = alias_pair.second;
             std::filesystem::path variable_output_folder = std::filesystem::path(output_folder) / variable_name;
             create_variable_images(input_file, variable_alias, variable_name, variable_output_folder);
             create_variable_gif(alias_pair.first, variable_output_folder);
+            auto end_time = std::chrono::high_resolution_clock::now();
+            auto duration = std::chrono::duration<double>(end_time - start_time).count();
+            std::cout << std::fixed << std::setprecision(3) << "Execution time: " << duration << " s" << std::endl;
         } 
     }
     return 0;

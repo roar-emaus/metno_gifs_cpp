@@ -18,6 +18,9 @@ find_package(CURL REQUIRED)
 
 include_directories(${OpenCV_INCLUDE_DIRS} ${NETCDF_CXX4_INCLUDE_DIR} ${CURL_INCLUDE_DIRS})
 
+# Set the optimization level
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
+
 add_executable(metno_gif main.cpp create_images.cpp download.cpp)
 
 target_link_libraries(metno_gif PUBLIC ${OpenCV_LIBS} ${NETCDF_CXX4_LIBRARY} ${CURL_LIBRARIES})
