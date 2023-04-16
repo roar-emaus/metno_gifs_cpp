@@ -62,7 +62,8 @@ int main(int argc, char *argv[]) {
         {"wind_gust", "wind_speed_of_gust"},
         {"cloud_cover", "cloud_area_fraction"},
         {"air_pressure", "air_pressure_at_sea_level"},
-        {"relative_humidity", "relative_humidity_2m"}
+        {"relative_humidity", "relative_humidity_2m"},
+        {"precipitation", "precipitation_amount"}
     };
 
     if (download) {

@@ -71,7 +71,21 @@ std::vector<std::vector<int>> get_base_colormap(const std::string& variable_alia
       { 8, 80, 154 },
       { 8, 48, 107 },
     };
-  } else if(variable_alias == "air_pressure") {
+
+  } else if (variable_alias == "precipitatoin") {
+    return {
+      { 247, 251, 255 },
+      { 221, 234, 246 },
+      { 197, 218, 238 },
+      { 157, 201, 224 },
+      { 106, 173, 213 },
+      { 65, 145, 197 },
+      { 32, 112, 180 },
+      { 8, 80, 154 },
+      { 8, 48, 107 },
+    };
+
+  }else if(variable_alias == "air_pressure") {
     return {
       { 5, 48, 97 },
       { 41, 113, 177 },
@@ -174,13 +188,13 @@ std::vector<std::vector<int>> get_base_colormap(const std::string& variable_alia
   };
 }
 
-std::pair<float, float> get_variable_range(const NcVar &var, size_t nTime, size_t nLat, size_t nLon) {
+std::pair<float, float> get_variable_range(const NcVar &var, size_t nTime, size_t nLat, size_t nLon, float min_threshold = -1e-10, float max_threshold = 1e20) {
   size_t num_dims = var.getDimCount();
   std::vector<size_t> start(var.getDimCount(), 0);
   std::vector<size_t> count = {1, nLat, nLon};
   std::vector<float> slice(nLat * nLon);
-  float globalMin = std::numeric_limits<float>::max();
-  float globalMax = std::numeric_limits<float>::lowest();
+  float globalMin = max_threshold;
+  float globalMax = min_threshold;
 
   std::cout << "Finding min/max values" << std::endl;
   for (size_t t = 0; t < nTime; t++) {
@@ -194,9 +208,13 @@ std::pair<float, float> get_variable_range(const NcVar &var, size_t nTime, size_
 
     float sliceMin = *std::min_element(slice.begin(), slice.end());
     float sliceMax = *std::max_element(slice.begin(), slice.end());
-
-    globalMin = std::min(globalMin, sliceMin);
-    globalMax = std::max(globalMax, sliceMax);
+    
+    if (sliceMin >= min_threshold){
+      globalMin = std::min(globalMin, sliceMin);
+    }
+    if (sliceMax <= max_threshold) {
+      globalMax = std::max(globalMax, sliceMax);
+    }
 
     print_progress(t+1, nTime);
   }
@@ -280,8 +298,13 @@ void create_images(const std::string &filename, const std::string &variable_name
     int colormap_size = 256;
     std::vector<std::vector<int>> base_colormap = get_base_colormap(variable_alias);
     std::vector<std::vector<int>> viridis = load_colormap(base_colormap, colormap_size);
-
-    std::pair<float, float> varRange = get_variable_range(var, nTime, nLat, nLon);
+    float min_threshold = -1e10;
+    float max_threshold = 1e10;
+    if (variable_alias == "precipitation"){
+        min_threshold = -0.01;
+    }
+    std::pair<float, float> varRange = get_variable_range(var, nTime, nLat, nLon, min_threshold, max_threshold);
+    std::cout << "Found value range of (" << varRange.first << ", " << varRange.second << ")" << std::endl;
     float minVar = varRange.first;
     float maxVar = varRange.second;
     std::cout << "Time loop" << std::endl;
