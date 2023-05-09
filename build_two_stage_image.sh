@@ -15,7 +15,7 @@ buildah run $bc -- bash -c 'pacman -Sy && \
         hdf5 \
         netcdf-cxx \
         imagemagick \
-        qt5-base \
+        qt6-base \
         fmt \
         glew \
         vtk \
@@ -40,7 +40,7 @@ buildah run $rc -- bash -c 'pacman -Sy && \
         hdf5 \
         netcdf-cxx \
         imagemagick \
-        qt5-base \
+        qt6-base \
         fmt \
         glew \
         vtk \
