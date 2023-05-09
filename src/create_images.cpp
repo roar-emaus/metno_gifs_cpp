@@ -188,41 +188,36 @@ std::vector<std::vector<int>> get_base_colormap(const std::string& variable_alia
   };
 }
 
+
 std::pair<float, float> get_variable_range(const NcVar &var, size_t nTime, size_t nLat, size_t nLon, float min_threshold = -1e-10, float max_threshold = 1e20) {
-  size_t num_dims = var.getDimCount();
   std::vector<size_t> start(var.getDimCount(), 0);
-  std::vector<size_t> count = {1, nLat, nLon};
-  std::vector<float> slice(nLat * nLon);
+  std::vector<size_t> count = {nTime, nLat, nLon};
+  std::vector<float> data(nTime * nLat * nLon);
+
+  // Load the entire variable into memory
+  var.getVar(start, count, data.data());
+
   float globalMin = max_threshold;
   float globalMax = min_threshold;
 
   std::cout << "Finding min/max values" << std::endl;
   for (size_t t = 0; t < nTime; t++) {
-    start[0] = t;
-    start[1] = 0;
-    start[2] = 0;
-    count[0] = 1;
-    count[1] = nLat;
-    count[2] = nLon;
-    var.getVar(start, count, slice.data());
+    for (size_t lat = 0; lat < nLat; lat++) {
+      for (size_t lon = 0; lon < nLon; lon++) {
+        float value = data[t * nLat * nLon + lat * nLon + lon];
 
-    float sliceMin = *std::min_element(slice.begin(), slice.end());
-    float sliceMax = *std::max_element(slice.begin(), slice.end());
-    
-    if (sliceMin >= min_threshold){
-      globalMin = std::min(globalMin, sliceMin);
+        if (value >= min_threshold && value <= max_threshold) {
+          globalMin = std::min(globalMin, value);
+          globalMax = std::max(globalMax, value);
+        }
+      }
     }
-    if (sliceMax <= max_threshold) {
-      globalMax = std::max(globalMax, sliceMax);
-    }
-
-    print_progress(t+1, nTime);
+    print_progress(t + 1, nTime);
   }
   std::cout << std::endl;
 
   return std::make_pair(globalMin, globalMax);
 }
-
 
 void create_gif(const std::string &input_pattern, const std::string &output_filename, int delay) {
   std::ostringstream command;
@@ -253,17 +248,10 @@ Mat create_image_for_time_step(const NcVar &var, size_t t, size_t nLat, size_t n
   count[1] = nLat;
   count[2] = nLon;
   var.getVar(start, count, tempSlice.data());
-
+  // float normFactor = 1.0f/(maxVar - minVar);
   Mat img(nLat, nLon, CV_8UC3);
-  for (size_t y = 0; y < nLat; y++) {
-    for (size_t x = 0; x < nLon; x++) {
-      float normValue = (tempSlice[y * nLon + x] - minVar) / (maxVar - minVar);
-      int colorIndex = static_cast<int>(std::round(normValue * (colormap.size() - 1)));
-      colorIndex = std::clamp(colorIndex, 0, static_cast<int>(colormap.size() - 1));
-      Vec3b color(colormap[colorIndex][2], colormap[colorIndex][1], colormap[colorIndex][0]);
-      img.at<Vec3b>(nLat - y - 1, x) = color;
-    }
-  }
+  ImageFillParallel imageFillParallel(tempSlice, colormap, minVar, maxVar, img, nLat, nLon);
+  cv::parallel_for_(cv::Range(0, nLat), imageFillParallel);
 
   return img;
 }
