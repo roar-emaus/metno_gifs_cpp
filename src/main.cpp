@@ -25,11 +25,11 @@ bool parse_arguments(int argc, char *argv[], std::string& input_file, std::strin
     }
 
     if (input_file.empty()) {
-        input_file = "/metno_gifs_cpp/input/metno_pp.nc";
+        input_file = "/input/metno_pp.nc";
     }
 
     if (output_folder.empty()) {
-        output_folder = "/metno_gifs_cpp/output";
+        output_folder = "/output";
     }
 
     return true;
@@ -50,7 +50,7 @@ void create_variable_gif(const std::string& alias, const std::filesystem::path& 
 int main(int argc, char *argv[]) {
     std::string input_file;
     std::string variable;
-    std::string output_folder = "output";
+    std::string output_folder;
     bool no_download = false;
 
     if (!parse_arguments(argc, argv, input_file, variable, output_folder, no_download)) {
