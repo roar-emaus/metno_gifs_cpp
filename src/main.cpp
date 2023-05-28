@@ -15,8 +15,8 @@ bool parse_arguments(int argc, char *argv[], std::string& input_file, std::strin
             variable = argv[i + 1];
         } else if (strcmp(argv[i], "--output") == 0) {
             output_folder = argv[i + 1];
-        } else if (strcmp(argv[i], "--download") == 0) {
-            download = true;
+        } else if (strcmp(argv[i], "--no_download") == 0) {
+            download = false;
             i--;
         } else {
             std::cerr << "Error: Unknown argument " << argv[i] << std::endl;
@@ -25,8 +25,11 @@ bool parse_arguments(int argc, char *argv[], std::string& input_file, std::strin
     }
 
     if (input_file.empty()) {
-        std::cerr << "Error: Missing required argument --input" << std::endl;
-        return false;
+        input_file = "/metno_gifs_cpp/input/metno_pp.nc"
+    }
+
+    if (output_folder.empty()) {
+        output_folder = "/metno_gifs_cpp/output"
     }
 
     return true;
@@ -50,7 +53,7 @@ int main(int argc, char *argv[]) {
     std::string output_folder = "output";
     bool download = false;
 
-    if (!parse_arguments(argc, argv, input_file, variable, output_folder, download)) {
+    if (!parse_arguments(argc, argv, input_file, variable, output_folder, no_download)) {
         return 1;
     }
 
@@ -66,7 +69,7 @@ int main(int argc, char *argv[]) {
         {"precipitation", "precipitation_amount"}
     };
 
-    if (download) {
+    if (!no_download) {
         // Capture the start time
         auto download_start_time = std::chrono::high_resolution_clock::now();
         if (download_if_newer(input_file)) {
