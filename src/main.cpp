@@ -87,7 +87,7 @@ int main(int argc, char *argv[]) {
         if (it != variable_aliases.end()) {
             std::filesystem::path variable_output_folder = std::filesystem::path(output_folder) / it->first;
             create_variable_images(input_file, it->second, it->first, variable_output_folder);
-            create_variable_gif(it->first, variable_output_folder);
+            //create_variable_gif(it->first, variable_output_folder);
         } else {
             std::cerr << "Error: Invalid variable name provided." << std::endl;
             return 1;
@@ -102,7 +102,7 @@ int main(int argc, char *argv[]) {
             const std::string& variable_alias = alias_pair.second;
             std::filesystem::path variable_output_folder = std::filesystem::path(output_folder) / variable_name;
             create_variable_images(input_file, variable_alias, variable_name, variable_output_folder);
-            create_variable_gif(alias_pair.first, variable_output_folder);
+            //create_variable_gif(alias_pair.first, variable_output_folder);
             auto end_time = std::chrono::high_resolution_clock::now();
             auto duration = std::chrono::duration<double>(end_time - start_time).count();
             std::cout << std::fixed << std::setprecision(3) << "Execution time: " << duration << " s" << std::endl;

@@ -27,7 +27,6 @@ void create_images(const std::string& input_filename, const std::string& variabl
 std::tuple<NcVar, size_t, size_t, size_t> load_netcdf_variable(NcFile &dataFile, const std::string &variable_name);
 std::vector<std::vector<int>> load_colormap(const std::vector<std::vector<double>> &base_colormap, int size);
 Mat create_image_for_time_step(const NcVar &var, size_t t, size_t nLat, size_t nLon, const std::vector<std::vector<int>> &colormap, float minVar, float maxVar);
-void remove_existing_images(const std::string &output_folder, const std::string &variable_alias);
 std::vector<std::vector<int>> get_base_colormap(const std::string& variable_alias);
 
 class ImageFillParallel : public cv::ParallelLoopBody {

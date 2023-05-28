@@ -23,20 +23,6 @@ void print_progress(size_t current, size_t total, int bar_width = 50) {
   std::cout.flush();
 }
 
-void remove_existing_images(const std::string &output_folder, const std::string &variable_alias) {
-  std::regex image_pattern(variable_alias + "_\\d{2}\\.jpg");
-  try {
-    for (const auto &entry : std::filesystem::directory_iterator(output_folder)) {
-      if (entry.is_regular_file() && std::regex_match(entry.path().filename().string(), image_pattern)) {
-        std::filesystem::remove(entry.path());
-      }
-    }
-  } catch (const std::filesystem::filesystem_error &e) {
-    std::cerr << "Error while cleaning up images: " << e.what() << std::endl;
-  }
-}
-
-
 std::vector<std::vector<int>> generate_colormap(const std::vector<std::vector<int>> &base_colormap, int size){
   std::vector<std::vector<int>> colormap(size);
   int base_size = base_colormap.size();
@@ -256,7 +242,6 @@ Mat create_image_for_time_step(const NcVar &var, size_t t, size_t nLat, size_t n
   return img;
 }
 
-
 std::tuple<NcVar, size_t, size_t, size_t> load_netcdf_variable(NcFile &dataFile, const std::string &variable_name) {
   NcVar var = dataFile.getVar(variable_name);
 
@@ -272,17 +257,15 @@ std::tuple<NcVar, size_t, size_t, size_t> load_netcdf_variable(NcFile &dataFile,
 
 void create_images(const std::string &filename, const std::string &variable_name, const std::string &variable_alias, const std::string &output_folder) {
 
-  std::cout << "Cleaning up existing images for " << variable_alias << std::endl;
-  remove_existing_images(output_folder, variable_alias);
-
   std::cout << "Creating images for " << variable_alias << std::endl;
 
   try {
     NcFile dataFile(filename, NcFile::read);
-    NcVar var;
+    NcVar var, timeVar;
     size_t nTime, nLat, nLon;
     std::tie(var, nTime, nLat, nLon) = load_netcdf_variable(dataFile, variable_name);
-    
+
+    timeVar = dataFile.getVar("time");
     int colormap_size = 256;
     std::vector<std::vector<int>> base_colormap = get_base_colormap(variable_alias);
     std::vector<std::vector<int>> viridis = load_colormap(base_colormap, colormap_size);
@@ -295,12 +278,13 @@ void create_images(const std::string &filename, const std::string &variable_name
     std::cout << "Found value range of (" << varRange.first << ", " << varRange.second << ")" << std::endl;
     float minVar = varRange.first;
     float maxVar = varRange.second;
+
     std::cout << "Time loop" << std::endl;
     for (size_t t = 0; t < nTime; t++) {
       Mat img = create_image_for_time_step(var, t, nLat, nLon, viridis, minVar, maxVar);
 
       // Downscale the image
-      double scale_factor = 0.3333; // Change this value to adjust the scaling factor
+      double scale_factor = 0.5; // Change this value to adjust the scaling factor
       int new_width = static_cast<int>(img.cols * scale_factor);
       int new_height = static_cast<int>(img.rows * scale_factor);
       Size new_size(new_width, new_height);
@@ -308,8 +292,16 @@ void create_images(const std::string &filename, const std::string &variable_name
       resize(img, downscaled_img, new_size, 0, 0, INTER_LINEAR);
 
       // Save image to disk
+      double timestamp;
+      timeVar.getVar({t}, &timestamp);
+
+      // Convert the timestamp into a string
+      std::time_t time = static_cast<std::time_t>(timestamp);
+      std::stringstream time_ss;
+      time_ss << std::put_time(std::localtime(&time), "%Y%m%d_%H"); // formats as: YYYYMMDD_HH
+      
       std::ostringstream filenameStream;
-      filenameStream << output_folder << "/" << variable_alias << "_" << std::setw(2) << std::setfill('0') << t << ".jpg";
+      filenameStream << output_folder << "/" << variable_alias << "_" << time_ss.str() << ".jpg";
       std::string output_filename = filenameStream.str();
       imwrite(output_filename, downscaled_img);
 

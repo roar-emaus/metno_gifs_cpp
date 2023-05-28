@@ -1,0 +1,58 @@
+# First stage: Build stage
+FROM docker.io/library/archlinux:base-20230319.0.135218 as build
+
+LABEL stage=build
+
+# Update package database, install build dependencies, and clean package cache
+RUN pacman -Sy --noconfirm --quiet && \
+    pacman -S --noconfirm --quiet \
+        base-devel \
+        cmake \
+        git \
+        opencv \
+        hdf5 \
+        netcdf-cxx \
+        imagemagick \
+        qt6-base \
+        fmt \
+        glew \
+        vtk \
+        curl && \
+    pacman -Scc --noconfirm
+
+# Copy your project files
+RUN git clone https://github.com/roar-emaus/metno_gifs_cpp.git
+RUN git clone https://github.com/vit-vit/CTPL.git /metno_gifs_cpp/src/external_h/CTPL
+
+# Build your project
+WORKDIR /metno_gifs_cpp/src
+RUN cmake . && make -j4
+
+
+# Second stage: Runtime stage
+FROM docker.io/library/archlinux:base-20230319.0.135218 as runtime
+
+LABEL stage=runtime
+
+# Install runtime dependencies and clean package cache
+RUN pacman -Sy --noconfirm --quiet && \
+    pacman -S --noconfirm --quiet \
+        libtool \
+        gcc \
+        gcc-libs \
+        opencv \
+        hdf5 \
+        netcdf-cxx \
+        imagemagick \
+        qt6-base \
+        fmt \
+        glew \
+        vtk \
+        jsoncpp \
+        curl && \
+    pacman -Scc --noconfirm
+
+COPY --from=build /metno_gifs_cpp/src/metno_gif /usr/local/bin/metno_gif
+COPY --from=build /metno_gifs_cpp/infinite_run.sh /usr/local/bin/infinite_run
+
+CMD ["/usr/local/bin/infinite_run"]

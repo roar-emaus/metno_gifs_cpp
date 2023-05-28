@@ -36,6 +36,9 @@ buildah config --label stage=runtime $rc
 # Install runtime dependencies and clean package cache in a single RUN command
 buildah run $rc -- bash -c 'pacman -Sy && \
     pacman -S --noconfirm --quiet \
+        libtool \
+        gcc \
+        gcc-libs \
         opencv \
         hdf5 \
         netcdf-cxx \
@@ -48,7 +51,9 @@ buildah run $rc -- bash -c 'pacman -Sy && \
         curl && \
     pacman -Scc --noconfirm'
 
-buildah copy --from=$bc $rc /src/metno_gif /usr/local/bin/metno_gif
+buildah copy --from=$bc $rc /metno_gifs_cpp/src/metno_gif /usr/local/bin/metno_gif
+buildah copy --from=$bc $rc /metno_gifs_cpp/infinite_run.sh /usr/local/bin/infinite_run
+
 
 # Commit and remove the container
 buildah commit $rc localhost/metno_gifs

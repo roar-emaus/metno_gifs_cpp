@@ -1,0 +1,20 @@
+# First stage: Build stage
+FROM docker.io/library/archlinux:base-20230319.0.135218
+
+RUN pacman -Sy && \
+    pacman -S --noconfirm --quiet \
+        base-devel \
+        cmake \
+        git \
+        opencv \
+        hdf5 \
+        netcdf-cxx \
+        imagemagick \
+        qt6-base \
+        fmt \
+        glew \
+        vtk \
+        curl \
+        gdb && \
+    pacman -Scc --noconfirm
+
