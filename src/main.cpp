@@ -25,11 +25,11 @@ bool parse_arguments(int argc, char *argv[], std::string& input_file, std::strin
     }
 
     if (input_file.empty()) {
-        input_file = "/metno_gifs_cpp/input/metno_pp.nc"
+        input_file = "/metno_gifs_cpp/input/metno_pp.nc";
     }
 
     if (output_folder.empty()) {
-        output_folder = "/metno_gifs_cpp/output"
+        output_folder = "/metno_gifs_cpp/output";
     }
 
     return true;
