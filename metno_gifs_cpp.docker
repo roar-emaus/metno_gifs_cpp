@@ -54,5 +54,6 @@ RUN pacman -Sy --noconfirm --quiet && \
 
 COPY --from=build /metno_gifs_cpp/src/metno_gif /usr/local/bin/metno_gif
 COPY --from=build /metno_gifs_cpp/infinite_run.sh /usr/local/bin/infinite_run
+RUN chmod +x /usr/local/bin/infinite_run
 
 CMD ["/usr/local/bin/infinite_run"]
