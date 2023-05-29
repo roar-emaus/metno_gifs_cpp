@@ -3,21 +3,29 @@
 #include "create_images.h"
 #include "download.h"
 
+
 bool parse_arguments(int argc, char *argv[], std::string& input_file, std::string& variable, std::string& output_folder, bool& no_download) {
-    for (int i = 1; i < argc; i += 2) {
-        if (i + 1 >= argc) {
-            std::cerr << "Error: Missing value for argument " << argv[i] << std::endl;
-            return false;
-        }
+    for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "--input") == 0) {
-            input_file = argv[i + 1];
+            if (++i >= argc) {
+                std::cerr << "Error: Missing value for argument --input\n";
+                return false;
+            }
+            input_file = argv[i];
         } else if (strcmp(argv[i], "--var") == 0) {
-            variable = argv[i + 1];
+            if (++i >= argc) {
+                std::cerr << "Error: Missing value for argument --var\n";
+                return false;
+            }
+            variable = argv[i];
         } else if (strcmp(argv[i], "--output") == 0) {
-            output_folder = argv[i + 1];
+            if (++i >= argc) {
+                std::cerr << "Error: Missing value for argument --output\n";
+                return false;
+            }
+            output_folder = argv[i];
         } else if (strcmp(argv[i], "--no_download") == 0) {
-            no_download = false;
-            i--;
+            no_download = true;
         } else {
             std::cerr << "Error: Unknown argument " << argv[i] << std::endl;
             return false;
