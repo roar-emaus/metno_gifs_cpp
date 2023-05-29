@@ -56,7 +56,7 @@ do
     if [ $remote_unix_timestamp -gt $local_unix_timestamp ]; then
         echo "Remote file is newer. Downloading and updating the local file."
         if curl -# -o $local_file $download_url; then
-            metno_gif --no_download
+            metno_gif
         else
             echo "Failed to download file. Retrying in 5 minutes..."
         fi

@@ -51,7 +51,7 @@ int main(int argc, char *argv[]) {
     std::string input_file;
     std::string variable;
     std::string output_folder;
-    bool no_download = false;
+    bool no_download = true;
 
     if (!parse_arguments(argc, argv, input_file, variable, output_folder, no_download)) {
         return 1;
